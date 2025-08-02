@@ -3,6 +3,9 @@ using System.Text.RegularExpressions;
 
 // GetAndSave5LetterWordsFromSaolFile();
 
+// Get5LetterWordFromMatchiTranslations();
+
+
 var fiveLetterWords = Get5LetterWordsList();
 Console.WriteLine(fiveLetterWords.Contains("SKAPA"));
 
@@ -53,4 +56,35 @@ void GetAndSave5LetterWordsFromSaolFile()
     const string outputPath = "SAOL_5Words_Clean.txt";
     var saolOutputPath = Path.Combine(dataFolder, outputPath);
     File.WriteAllLines(saolOutputPath, filteredWords);
+}
+
+void Get5LetterWordFromMatchiTranslations()
+{
+    var dataFolder = Path.Combine(Directory.GetCurrentDirectory(), "Data");
+    var translationOutputPath = Path.Combine(dataFolder, "MatchiTranslations.txt");
+    var lines = File.ReadAllLines(translationOutputPath);
+    var fiveLetterWordsNew = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    var wordPattern = new Regex(@"\b[A-Za-z]{5}\b");
+
+    foreach (var line in lines)
+    {
+        var parts = line.Split('=', 2);
+        if (parts.Length < 2) continue;
+
+        var valuePart = parts[1];
+
+        foreach (Match match in wordPattern.Matches(valuePart))
+        {
+            fiveLetterWordsNew.Add(match.Value);
+        }
+    }
+
+    var sortedWords = fiveLetterWordsNew
+        .OrderBy(word => word, StringComparer.OrdinalIgnoreCase);
+
+    Console.WriteLine($"Filtered 5-letter words: {sortedWords.Count()}");
+    foreach (var word in sortedWords)
+    {
+        Console.WriteLine(word);
+    }
 }

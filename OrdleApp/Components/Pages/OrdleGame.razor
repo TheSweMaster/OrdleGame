@@ -2,7 +2,8 @@
 @using System.Text.RegularExpressions
 @rendermode InteractiveServer
 
-@inject HashSet<string> FiveLetterWords
+@inject SaolWords FiveLetterWords
+@inject MatchiWords MatchiFiveLetterWords
 
 <PageTitle>Ordle Game</PageTitle>
 
@@ -164,6 +165,7 @@
     private const int MaxGuesses = 6;
     private const int GuessLength = 5;
     private string userInput = string.Empty;
+    private HashSet<string> selected5LetterWordList => FiveLetterWords?.Words ?? new HashSet<string>();
     private List<string> guesses = new();
     private ElementReference inputRef;
     private string errorMessage = string.Empty;
@@ -208,7 +210,7 @@
         {
             errorMessage = "Input must only contain letters A-Z, Å, Ä, Ö.";
         }
-        else if (!FiveLetterWords.Contains(guessUpper))
+        else if (!selected5LetterWordList.Contains(guessUpper))
         {
             errorMessage = "Word not found in word list.";
         }
@@ -260,15 +262,15 @@
 
     private void SetRandomWord()
     {
-        if (FiveLetterWords == null || FiveLetterWords.Count == 0)
+        if (selected5LetterWordList == null || selected5LetterWordList.Count == 0)
         {
             randomWord = string.Empty;
             errorMessage = "Word list is empty.";
             return;
         }
 
-        var index = rng.Next(FiveLetterWords.Count);
-        randomWord = FiveLetterWords.ElementAt(index);
+        var index = rng.Next(selected5LetterWordList.Count);
+        randomWord = selected5LetterWordList.ElementAt(index);
     }
 
     private void ToggleHelp()
