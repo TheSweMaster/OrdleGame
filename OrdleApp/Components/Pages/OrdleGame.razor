@@ -44,7 +44,8 @@
 </style>
 
 <div>
-    <h4>Guesses:</h4>
+    <p>Guess the random 5 letter word</p>
+    <h4>Guesses</h4>
     <ul class="ordle-guess-list">
         @for (var i = 0; i < MaxGuesses; i++)
         {
@@ -84,7 +85,7 @@
            maxlength="@GuessLength"
            minlength="@GuessLength"
            pattern="[A-Za-zÅÄÖåäö]{@GuessLength}"
-           title="Enter @GuessLength letters"
+           title="Guess a @GuessLength letter word"
            type="text"
            autocomplete="off"
            aria-label="Ordle guess input"
@@ -94,7 +95,6 @@
            disabled="@(guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))"
     />
 </div>
-<div>Try to guess the @GuessLength letter Swedish word within @MaxGuesses guesses!</div>
 <br/>
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -118,6 +118,48 @@
     <button class="btn btn-primary" @onclick="SubmitGuess" disabled="@(guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))">Submit Guess</button>
 </p>
 
+<div style="margin-bottom: 1rem;">
+    <button type="button"
+            class="btn btn-info"
+            style="position: relative;"
+            @onclick="ToggleHelp">
+        Help?
+    </button>
+    @if (showHelp)
+    {
+        <div style="position: absolute; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 1rem; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 0.5rem;">
+            <strong>How to play:</strong>
+            <ul>
+                <li>Guess the hidden Swedish 5-letter word in @MaxGuesses tries.</li>
+                <li>Each guess must be a valid Swedish word from the SAOL word list.</li>
+                <li>After each guess, the color of the tiles will change to show how close your guess was to the word:
+                    <ul>
+                        <li><span style="background:limegreen;color:white;padding:2px 6px;border-radius:3px;">Green</span>: Correct letter in the correct position.</li>
+                        <li><span style="background:yellow;padding:2px 6px;border-radius:3px;">Yellow</span>: Correct letter in the wrong position.</li>
+                        <li>No color: Letter is not in the word.</li>
+                    </ul>
+                </li>
+                <li>No duplicate guesses allowed.</li>
+            </ul>
+            <strong>Word List Source:</strong>
+            <div style="font-size:0.95em;">
+                The word list is based on Swedish 5-letter words from SAOL (Svenska Akademiens ordlista), versions 13 and 14.<br/>
+                Only words containing the letters A-Z, Å, Ä, Ö are included.
+            </div>
+            <button class="btn btn-sm btn-secondary mt-2" @onclick="ToggleHelp">Close</button>
+        </div>
+    }
+</div>
+<br/>
+<hr/>
+<p>
+    <div class="list-group">
+        <div class="list-group-item">TheSweMaster © @DateTime.Now.Year</div>
+        <div class="list-group-item">Github: <a target="_blank" href="https://github.com/TheSweMaster">https://github.com/TheSweMaster</a></div>
+        <div class="list-group-item">YouTube: <a target="_blank" href="https://www.youtube.com/c/theswemaster/videos">https://www.youtube.com/c/theswemaster/videos</a></div>
+    </div>
+</p>
+
 @code {
     private const int MaxGuesses = 6;
     private const int GuessLength = 5;
@@ -128,6 +170,7 @@
     private string successMessage = string.Empty;
     private static readonly Random rng = new();
     private string randomWord = string.Empty;
+    private bool showHelp = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -164,6 +207,10 @@
         else if (!Regex.IsMatch(userInput, @$"^[A-Za-zÅÄÖåäö]{{{GuessLength}}}$"))
         {
             errorMessage = "Input must only contain letters A-Z, Å, Ä, Ö.";
+        }
+        else if (!FiveLetterWords.Contains(guessUpper))
+        {
+            errorMessage = "Word not found in word list.";
         }
         else if (guesses.Contains(guessUpper))
         {
@@ -224,4 +271,8 @@
         randomWord = FiveLetterWords.ElementAt(index);
     }
 
+    private void ToggleHelp()
+    {
+        showHelp = !showHelp;
+    }
 }
