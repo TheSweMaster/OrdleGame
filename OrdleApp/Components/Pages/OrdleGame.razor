@@ -8,6 +8,28 @@
 
 <h1>Ordle</h1>
 <div>Random Word: @randomWord</div>
+
+<style>
+    .ordle-square {
+        display: inline-block;
+        width: 38px;
+        text-align: center;
+        border: 2px solid #888;
+        border-radius: 4px;
+        margin: 1px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        vertical-align: middle;
+    }
+    .ordle-correct {
+        background-color: limegreen;
+        color: white;
+    }
+    .ordle-present {
+        background-color: yellow;
+    }
+</style>
+
 <div>
     <h4>Guesses:</h4>
     <ul>
@@ -15,29 +37,29 @@
         {
             if (i < guesses.Count)
             {
-                <li>
+                <li style="list-style-type: none;">
                     @for (int j = 0; j < GuessLength; j++)
                     {
                         var guessChar = guesses[i][j];
-                        string style = "display:inline-block;width:22px;text-align:center;";
-                        if (j < randomWord.Length && guessChar == randomWord[j])
-                        {
-                            style += "background-color:limegreen;color:white;";
-                        }
-                        else if (randomWord.Contains(guessChar, StringComparison.OrdinalIgnoreCase))
-                        {
-                            style += "background-color:yellow;";
-                        }
-
-                        <span style="@style">
-                            @guessChar
-                        </span>
+                        var isCorrectPosition = j < randomWord.Length && guessChar == randomWord[j];
+                        var isInWord = !isCorrectPosition && randomWord.Contains(guessChar, StringComparison.OrdinalIgnoreCase);
+                        var cssClass = "ordle-square";
+                        if (isCorrectPosition)
+                            cssClass += " ordle-correct";
+                        else if (isInWord)
+                            cssClass += " ordle-present";
+                        <span class="@cssClass">@guessChar</span>
                     }
                 </li>
             }
             else
             {
-                <li>&nbsp;</li>
+                <li style="list-style-type: none;">
+                    @for (int j = 0; j < GuessLength; j++)
+                    {
+                        <span class="ordle-square">&nbsp;</span>
+                    }
+                </li>
             }
         }
     </ul>
@@ -50,7 +72,6 @@
            minlength="@GuessLength"
            pattern="[A-Za-zÅÄÖåäö]{@GuessLength}"
            title="Enter @GuessLength letters"
-           placeholder=""
            type="text"
            autocomplete="off"
            aria-label="Ordle guess input"
@@ -58,10 +79,10 @@
            style="width: 120px; display: inline-block; text-transform: uppercase;"
            @oninput="ForceUppercase"
            @onkeydown="HandleKeyDown"
-           disabled="@(guesses.Count >= MaxGuesses)"
+           disabled="@(guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))"
     />
 </div>
-<div>Try guess the @GuessLength letter Swedish word within @MaxGuesses guesses!</div>
+<div>Try to guess the @GuessLength letter Swedish word within @MaxGuesses guesses!</div>
 <br/>
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -82,8 +103,7 @@
     </div>
 }
 <p>
-    <button class="btn btn-primary" @onclick="SubmitGuess" disabled="@(guesses.Count >= MaxGuesses)">Submit Guess
-    </button>
+    <button class="btn btn-primary" @onclick="SubmitGuess" disabled="@(guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))">Submit Guess</button>
 </p>
 
 @code {
@@ -113,11 +133,13 @@
 
     private void SubmitGuess()
     {
-        if (guesses.Count >= MaxGuesses)
+        if (guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))
             return;
 
         errorMessage = string.Empty;
         successMessage = string.Empty;
+
+        var guessUpper = userInput.ToUpper();
 
         if (string.IsNullOrWhiteSpace(userInput))
         {
@@ -131,13 +153,12 @@
         {
             errorMessage = "Input must only contain letters A-Z, Å, Ä, Ö.";
         }
-        else if (guesses.Contains(userInput.ToUpper()))
+        else if (guesses.Contains(guessUpper))
         {
             errorMessage = "You have already guessed that word.";
         }
         else
         {
-            var guessUpper = userInput.ToUpper();
             guesses.Add(guessUpper);
 
             if (guessUpper == randomWord)
@@ -148,7 +169,6 @@
             userInput = string.Empty;
         }
 
-        // Refocus input after submitting or error
         _ = Task.Run(async () => await inputRef.FocusAsync());
     }
 
@@ -160,9 +180,12 @@
 
     private void HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && guesses.Count < MaxGuesses)
+        if (e.Key == "Enter")
         {
-            SubmitGuess();
+            if (guesses.Count < MaxGuesses && string.IsNullOrEmpty(successMessage))
+            {
+                SubmitGuess();
+            }
         }
     }
 
