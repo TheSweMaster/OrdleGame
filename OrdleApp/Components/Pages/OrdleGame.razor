@@ -1,67 +1,192 @@
-﻿@page "/weather"
-@attribute [StreamRendering]
+﻿@page "/ordle-game"
+@using System.Text.RegularExpressions
+@rendermode InteractiveServer
 
-<PageTitle>Weather</PageTitle>
+@inject HashSet<string> FiveLetterWords
 
-<h1>Weather</h1>
+<PageTitle>Ordle Game</PageTitle>
 
-<p>This component demonstrates showing data.</p>
-
-@if (forecasts == null)
-{
-    <p>
-        <em>Loading...</em>
-    </p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var forecast in forecasts)
+<h1>Ordle</h1>
+<div>Random Word: @randomWord</div>
+<div>
+    <h4>Guesses:</h4>
+    <ul>
+        @for (var i = 0; i < MaxGuesses; i++)
         {
-            <tr>
-                <td>@forecast.Date.ToShortDateString()</td>
-                <td>@forecast.TemperatureC</td>
-                <td>@forecast.TemperatureF</td>
-                <td>@forecast.Summary</td>
-            </tr>
+            if (i < guesses.Count)
+            {
+                <li>
+                    @for (int j = 0; j < GuessLength; j++)
+                    {
+                        var guessChar = guesses[i][j];
+                        string style = "display:inline-block;width:22px;text-align:center;";
+                        if (j < randomWord.Length && guessChar == randomWord[j])
+                        {
+                            style += "background-color:limegreen;color:white;";
+                        }
+                        else if (randomWord.Contains(guessChar, StringComparison.OrdinalIgnoreCase))
+                        {
+                            style += "background-color:yellow;";
+                        }
+
+                        <span style="@style">
+                            @guessChar
+                        </span>
+                    }
+                </li>
+            }
+            else
+            {
+                <li>&nbsp;</li>
+            }
         }
-        </tbody>
-    </table>
+    </ul>
+</div>
+
+<div>
+    <input @ref="inputRef"
+           @bind="userInput"
+           maxlength="@GuessLength"
+           minlength="@GuessLength"
+           pattern="[A-Za-zÅÄÖåäö]{@GuessLength}"
+           title="Enter @GuessLength letters"
+           placeholder=""
+           type="text"
+           autocomplete="off"
+           aria-label="Ordle guess input"
+           class="form-control"
+           style="width: 120px; display: inline-block; text-transform: uppercase;"
+           @oninput="ForceUppercase"
+           @onkeydown="HandleKeyDown"
+           disabled="@(guesses.Count >= MaxGuesses)"
+    />
+</div>
+<div>Try guess the @GuessLength letter Swedish word within @MaxGuesses guesses!</div>
+<br/>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
 }
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @successMessage
+        <button class="btn btn-link" @onclick="RestartGame">Restart</button>
+    </div>
+}
+@if (guesses.Count >= MaxGuesses && string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-warning" role="alert">
+        Game Over! The word was '@randomWord'.
+        <button class="btn btn-link" @onclick="RestartGame">Restart</button>
+    </div>
+}
+<p>
+    <button class="btn btn-primary" @onclick="SubmitGuess" disabled="@(guesses.Count >= MaxGuesses)">Submit Guess
+    </button>
+</p>
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private const int MaxGuesses = 6;
+    private const int GuessLength = 5;
+    private string userInput = string.Empty;
+    private List<string> guesses = new();
+    private ElementReference inputRef;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private static readonly Random rng = new();
+    private string randomWord = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
-
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+        SetRandomWord();
+        await base.OnInitializedAsync();
     }
 
-    private class WeatherForecast
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        if (firstRender)
+        {
+            await inputRef.FocusAsync();
+        }
+    }
+
+    private void SubmitGuess()
+    {
+        if (guesses.Count >= MaxGuesses)
+            return;
+
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(userInput))
+        {
+            errorMessage = "Input cannot be empty.";
+        }
+        else if (userInput.Length != GuessLength)
+        {
+            errorMessage = $"Input must be exactly {GuessLength} letters.";
+        }
+        else if (!Regex.IsMatch(userInput, @$"^[A-Za-zÅÄÖåäö]{{{GuessLength}}}$"))
+        {
+            errorMessage = "Input must only contain letters A-Z, Å, Ä, Ö.";
+        }
+        else if (guesses.Contains(userInput.ToUpper()))
+        {
+            errorMessage = "You have already guessed that word.";
+        }
+        else
+        {
+            var guessUpper = userInput.ToUpper();
+            guesses.Add(guessUpper);
+
+            if (guessUpper == randomWord)
+            {
+                successMessage = $"Correct! You guessed the word '{randomWord}'";
+            }
+
+            userInput = string.Empty;
+        }
+
+        // Refocus input after submitting or error
+        _ = Task.Run(async () => await inputRef.FocusAsync());
+    }
+
+    private void ForceUppercase(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        userInput = value.ToUpper();
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && guesses.Count < MaxGuesses)
+        {
+            SubmitGuess();
+        }
+    }
+
+    private void RestartGame()
+    {
+        guesses.Clear();
+        userInput = string.Empty;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        SetRandomWord();
+        _ = Task.Run(async () => await inputRef.FocusAsync());
+    }
+
+    private void SetRandomWord()
+    {
+        if (FiveLetterWords == null || FiveLetterWords.Count == 0)
+        {
+            randomWord = string.Empty;
+            errorMessage = "Word list is empty.";
+            return;
+        }
+
+        var index = rng.Next(FiveLetterWords.Count);
+        randomWord = FiveLetterWords.ElementAt(index);
     }
 
 }

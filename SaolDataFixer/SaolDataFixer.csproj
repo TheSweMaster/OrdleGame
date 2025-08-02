@@ -8,10 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Data\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="Data\SAOL13_AND_14.txt">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
