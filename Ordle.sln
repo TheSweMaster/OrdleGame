@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdleApp", "OrdleApp\OrdleApp.csproj", "{B53FBBB2-8D42-444F-8ACD-4F9DDE82AAE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaolDataFixer", "SaolDataFixer\SaolDataFixer.csproj", "{55953C3E-F3CF-44CB-A99F-2184E3518B3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B53FBBB2-8D42-444F-8ACD-4F9DDE82AAE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B53FBBB2-8D42-444F-8ACD-4F9DDE82AAE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B53FBBB2-8D42-444F-8ACD-4F9DDE82AAE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B53FBBB2-8D42-444F-8ACD-4F9DDE82AAE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55953C3E-F3CF-44CB-A99F-2184E3518B3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55953C3E-F3CF-44CB-A99F-2184E3518B3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55953C3E-F3CF-44CB-A99F-2184E3518B3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55953C3E-F3CF-44CB-A99F-2184E3518B3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
