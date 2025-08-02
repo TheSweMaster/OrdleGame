@@ -28,11 +28,24 @@
     .ordle-present {
         background-color: yellow;
     }
+    .ordle-input {
+        width: calc(38px * 5 + 8px); /* 5 letters * 38px + 4*2px margin */
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .ordle-guess-list {
+        padding-left: 0;
+        margin-bottom: 5px;
+    }
 </style>
 
 <div>
     <h4>Guesses:</h4>
-    <ul>
+    <ul class="ordle-guess-list">
         @for (var i = 0; i < MaxGuesses; i++)
         {
             if (i < guesses.Count)
@@ -75,8 +88,7 @@
            type="text"
            autocomplete="off"
            aria-label="Ordle guess input"
-           class="form-control"
-           style="width: 120px; display: inline-block; text-transform: uppercase;"
+           class="form-control ordle-input"
            @oninput="ForceUppercase"
            @onkeydown="HandleKeyDown"
            disabled="@(guesses.Count >= MaxGuesses || !string.IsNullOrEmpty(successMessage))"
@@ -163,7 +175,7 @@
 
             if (guessUpper == randomWord)
             {
-                successMessage = $"Correct! You guessed the word '{randomWord}'";
+                successMessage = $"Correct! You guessed the word '{randomWord}' in {guesses.Count} guesses.";
             }
 
             userInput = string.Empty;
