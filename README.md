@@ -1,5 +1,5 @@
-# TrackmaniaMiniGamesBlazor
- Ordle Game website made with ASP.NET Blazor
+# Ordle Game
+ Swedish Wordle game website made with ASP.NET Blazor
 
 <img width="583" height="1273" alt="image" src="https://github.com/user-attachments/assets/3922a957-8c98-4127-a078-e45de638c18c" />
 
